@@ -10,7 +10,7 @@ public static class BitmapExtension
         int[,] array2D = new int[image.Width, image.Height];
 
 #pragma warning disable CA1416
-        BitmapData bitmapData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
+        BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
             ImageLockMode.ReadWrite,
             PixelFormat.Format32bppRgb);
 #pragma warning restore CA1416

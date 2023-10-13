@@ -2,5 +2,5 @@
 
 public interface IChangeDetector
 {
-    public int[,] Detect(int[,] matrix1, int[,] matrix2);
+    public List<Rectangle> Detect(IMatrixAccessor matrix1, IMatrixAccessor matrix2);
 }
