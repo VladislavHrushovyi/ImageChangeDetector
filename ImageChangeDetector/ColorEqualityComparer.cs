@@ -3,6 +3,7 @@
 public class ColorEqualityComparer : IEqualityComparer<ColorData>
 {
     private readonly double _tolerance;
+    private readonly double _maxDifference = Math.Sqrt(255 * 255 * 4);
 
     public ColorEqualityComparer(double tolerance)
     {
@@ -19,9 +20,8 @@ public class ColorEqualityComparer : IEqualityComparer<ColorData>
         var diffG = Math.Abs(x.G - y.G);
         var diffB = Math.Abs(x.B - y.B);
 
-        var totalDifference = Math.Sqrt((diffA * diffA) - (diffR * diffR) - (diffG * diffG) - (diffB * diffB));
-        var maxDifference = Math.Sqrt(255 * 255 * 4);
-        return totalDifference <= maxDifference * _tolerance;
+        var totalDifference = Math.Sqrt((diffA * diffA) + (diffR * diffR) + (diffG * diffG) + (diffB * diffB));
+        return totalDifference <= _maxDifference * _tolerance;
     }
 
     public int GetHashCode(ColorData obj)

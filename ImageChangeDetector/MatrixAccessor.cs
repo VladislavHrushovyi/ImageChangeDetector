@@ -15,5 +15,5 @@ public class MatrixAccessor : IMatrixAccessor
     public int Height { get; set; }
 
     public ColorData GetColorData(int x, int y)
-        => ColorData.FromInt(_matrix[x, y]);
+        => ColorData.FromInt(_matrix[y, x]);
 }
