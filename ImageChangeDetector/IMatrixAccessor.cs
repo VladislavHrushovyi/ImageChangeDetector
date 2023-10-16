@@ -2,8 +2,8 @@
 
 public interface IMatrixAccessor
 {
-    int Width { get; set; }
-    int Height { get; set; }
+    int Width { get; }
+    int Height { get; }
 
     ColorData GetColorData(int x, int y);
 }

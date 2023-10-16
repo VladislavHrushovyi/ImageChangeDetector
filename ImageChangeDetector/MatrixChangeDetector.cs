@@ -24,7 +24,7 @@ public class MatrixChangeDetector : IChangeDetector
         }
         if (img2.Width > img1.Width)
         {
-            rectangles.Add(new Rectangle(img1.Width, 0, img2.Height, img2.Width - img1.Width)); 
+            rectangles.Add(new Rectangle(img1.Width, 0, img1.Height, img2.Width - img1.Width)); 
         }
 
         bool[,] visited = new bool[height, width];

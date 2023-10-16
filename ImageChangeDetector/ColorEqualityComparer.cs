@@ -20,12 +20,12 @@ public class ColorEqualityComparer : IEqualityComparer<ColorData>
         var diffG = Math.Abs(x.G - y.G);
         var diffB = Math.Abs(x.B - y.B);
 
-        var totalDifference = Math.Sqrt((diffA * diffA) + (diffR * diffR) + (diffG * diffG) + (diffB * diffB));
+        var totalDifference = Math.Sqrt(diffA * diffA + diffR * diffR + diffG * diffG + diffB * diffB);
         return totalDifference <= _maxDifference * _tolerance;
     }
 
     public int GetHashCode(ColorData obj)
     {
-        return HashCode.Combine(obj.R, obj.G, obj.B, obj.A);
+        return obj.GetHashCode();
     }
 }

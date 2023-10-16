@@ -7,37 +7,50 @@ public static class BitmapExtension
 {
     public static int[,] AsMatrix(this Bitmap image)
     {
-        int[,] array2D = new int[image.Width, image.Height];
+        var height = image.Height;
+        var width = image.Width;
+        int[,] array2D = new int[height, width];
 
 #pragma warning disable CA1416
-        BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
-            ImageLockMode.ReadWrite,
+        BitmapData bitmapData = image.LockBits(new System.Drawing.Rectangle(0, 0, width, height),
+            ImageLockMode.ReadOnly,
             PixelFormat.Format32bppRgb);
 #pragma warning restore CA1416
-
-        unsafe
+        try
         {
-            byte* address = (byte*)bitmapData.Scan0;
-
-            int paddingOffset = bitmapData.Stride - (image.Width * 4);//4 bytes per pixel
-
-            for (int i = 0; i < image.Width; i++)
+            int stride = bitmapData.Stride;
+            IntPtr scan0 = bitmapData.Scan0;
+            
+            unsafe
             {
-                for (int j = 0; j < image.Height; j++)
-                {
-                    byte[] temp = new byte[4];
-                    temp[0] = address[0];
-                    temp[1] = address[1];
-                    temp[2] = address[2];
-                    temp[3] = address[3];
-                    array2D[i, j] = BitConverter.ToInt32(temp, 0);
-                    address += 4;
-                }
+                byte* address = (byte*)(void*)scan0;
 
-                address += paddingOffset;
+                //int paddingOffset = bitmapData.Stride - (image.Width * 4);//4 bytes per pixel
+
+                for (int y = 0; y < height; y++)
+                {
+                    for (int x = 0; x < width; x++)
+                    {
+                        int blue = address[0];
+                        int green = address[1];
+                        int red = address[2];
+                        int alpha = address[3];
+
+                        int pixelValue = ((alpha << 24) | (red << 16) | (green << 8) | blue);
+
+                        array2D[y, x] = pixelValue;
+
+                        address += 4;
+                    }
+
+                    address += stride - (width * 4);
+                }
             }
         }
-        image.UnlockBits(bitmapData);
+        finally
+        {
+            image.UnlockBits(bitmapData);   
+        }
 
         return array2D;
     }

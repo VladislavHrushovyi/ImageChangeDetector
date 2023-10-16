@@ -11,8 +11,8 @@ public class MatrixAccessor : IMatrixAccessor
         Height = matrix.GetLength(0);
     }
 
-    public int Width { get; set; }
-    public int Height { get; set; }
+    public int Width { get; }
+    public int Height { get; }
 
     public ColorData GetColorData(int x, int y)
         => ColorData.FromInt(_matrix[y, x]);
