@@ -12,7 +12,7 @@ public class ChangeDetectorApplication
     }
     public Bitmap Execute(Bitmap bitmap1, Bitmap bitmap2)
     {
-        var detector = new MatrixChangeDetector(new ColorEqualityComparer(0.1));
+        var detector = new MatrixChangeDetectorModified(new ColorEqualityComparer(0.1));
         var rectangles = detector.Detect(new MatrixAccessor(bitmap1.AsMatrix()), new MatrixAccessor(bitmap2.AsMatrix()));
 
         return DrawRectangles(bitmap1, rectangles);

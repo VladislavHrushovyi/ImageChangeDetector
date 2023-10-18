@@ -44,47 +44,68 @@ public class MatrixChangeDetectorModified : IChangeDetector
     {
         int width = img1.Width;
         int height = img1.Height;
-
+        int maxDistanceDifference = 2;
+        
         int endX = startX;
         int endY = startY;
-
-        while (endX + 1 < width 
-               && !visited[startY, endX + 1] 
-               && !_comparer.Equals(img1.GetColorData(endX + 1, startY), img2.GetColorData(endX + 1, startY))
-              )
-        {
-            //add checking 5 pixels
-            endX++;
-            visited[startY, endX] = true;
-        }
-
-        while (endY + 1 < height)
-        {
-            //add cheching 5 pixels
-            bool canExpand = true;
-            for (int x = startX; x <= endX; x++)
-            {
-                if (visited[endY + 1, x] 
-                    || _comparer.Equals(img1.GetColorData(x, endY + 1), img2.GetColorData(x, endY + 1))
-                   )
-                {
-                    canExpand = false;
-                    break;
-                }
-
-                visited[endY + 1, x] = true;
-            }
-
-            if (canExpand)
-            {
-                endY++;
-            }
-            else
-            {
-                break;
-            }
-        }
+        ContainBadPixelByX(img1, img2, visited, ref endX, endY, maxDistanceDifference);
+        ContainBadPixelByY(img1, img2, visited, endX, ref endY, maxDistanceDifference);
 
         return new Rectangle(startX, startY, endY - startY + 1, endX - startX + 1);
+    }
+
+    private bool ContainBadPixelByX(
+        IMatrixAccessor img1, 
+        IMatrixAccessor img2, 
+        bool[,] visited, 
+        ref int startX, int startY, 
+        int maxDistanceDifference)
+    {
+        bool hasDifferenceByX = true;
+        while (hasDifferenceByX)
+        {
+            var pixelsFromImg1 = img1.GetRangeByX(startY, maxDistanceDifference).ToArray();
+            var pixelsFromImg2 = img2.GetRangeByX(startY, maxDistanceDifference).ToArray();
+
+            var compareResults = Enumerable.Range(0, maxDistanceDifference - 1)
+                .Select(i => _comparer.Equals(
+                    ColorData.FromInt(pixelsFromImg1[i]), 
+                    ColorData.FromInt(pixelsFromImg2[i])
+                    )).Where(x => x);
+            for (int x = startX + 1; x < startX + maxDistanceDifference && x < img1.Width; x++)
+            {
+                visited[startY, x] = true;
+            }
+            hasDifferenceByX = !compareResults.Any();
+            startX += maxDistanceDifference;
+        }
+        return hasDifferenceByX;
+    }
+    private bool ContainBadPixelByY(
+        IMatrixAccessor img1, 
+        IMatrixAccessor img2, 
+        bool[,] visited, 
+        int startX, ref int startY, 
+        int maxDistanceDifference)
+    {
+        bool hasDifferenceByY = true;
+        while (hasDifferenceByY)
+        {
+            var pixelsFromImg1 = img1.GetRangeByY(startX, maxDistanceDifference).ToArray();
+            var pixelsFromImg2 = img2.GetRangeByY(startX, maxDistanceDifference).ToArray();
+
+            var compareResults = Enumerable.Range(0, maxDistanceDifference - 1)
+                .Select(i => _comparer.Equals(
+                    ColorData.FromInt(pixelsFromImg1[i]), 
+                    ColorData.FromInt(pixelsFromImg2[i])
+                )).Where(x => x);
+            for (int y = startY + 1; y < startY + maxDistanceDifference && y < img1.Height; y++)
+            {
+                visited[y, startX] = true;
+            }
+            hasDifferenceByY = !compareResults.Any();
+            startY += maxDistanceDifference;
+        }
+        return hasDifferenceByY;
     }
 }
