@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace ImageChangeDetector;
+﻿namespace ImageChangeDetector;
 
 public class MatrixChangeDetectorModified : IChangeDetector
 {
@@ -27,46 +25,47 @@ public class MatrixChangeDetectorModified : IChangeDetector
             rectangles.Add(new Rectangle(img1.Width, 0, img1.Height, img2.Width - img1.Width)); 
         }
 
-        HashSet<Tuple<int, int>> coordinates = new HashSet<Tuple<int, int>>();
+        List<(int Y, int X)> coordinates = new List<(int Y, int X)>();
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
                 if (!_comparer.Equals(img1.GetColorData(x,y),img2.GetColorData(x,y)))
                 {
-                    coordinates.Add(new Tuple<int, int>(y, x));
+                    coordinates.Add((Y: y, X: x));
                 }
             }
         }
 
         while (coordinates.Count != 0)
         {
-            var tempRect = new Rectangle(coordinates.ElementAt(0).Item2, coordinates.ElementAt(0).Item1, 0, 0);
-            coordinates.Remove(coordinates.ElementAt(0));
+            var startPoint = coordinates.ElementAt(0);
+            var tempRect = new Rectangle(startPoint.Item2, startPoint.Item1, 0, 0);
+            coordinates.Remove(startPoint);
             if (!coordinates.Any())
             {
                 break;
             }
-            Rectangle rectangle = GrowRectangle(coordinates,coordinates.ElementAt(0), tempRect);
+            Rectangle rectangle = GrowRectangle(coordinates,startPoint, tempRect);
             rectangles.Add(rectangle);
         }
         
         return rectangles;
     }
 
-    private Rectangle GrowRectangle(HashSet<Tuple<int, int>> coordinates,Tuple<int, int> startPoint,  Rectangle rectangle)
+    private Rectangle GrowRectangle(List<(int X, int Y)> coordinates,(int Y, int X) startPoint,  Rectangle rectangle)
     {
-        var nearestPoints = coordinates.Where(x => CalcDistance(startPoint, x) < 5).ToList();
+        var nearestPoints = coordinates.Where(x => CalcDistance(startPoint, x) < 5).ToArray();
         if (!nearestPoints.Any())
         {
-            if (rectangle.Height < Math.Abs(rectangle.Top - startPoint.Item1))
+            if (rectangle.Height < Math.Abs(rectangle.Top - startPoint.Y))
             {
-                rectangle = rectangle with { Height = Math.Abs(rectangle.Top - startPoint.Item1) };
+                rectangle = rectangle with { Height = (Math.Abs(rectangle.Top - startPoint.Y)) + 2 };
             }
         
-            if (rectangle.Width < Math.Abs(rectangle.Left - startPoint.Item2))
+            if (rectangle.Width < Math.Abs(rectangle.Left - startPoint.X))
             {
-                rectangle = rectangle with { Width = Math.Abs(rectangle.Left - startPoint.Item2) };
+                rectangle = rectangle with { Width = (Math.Abs(rectangle.Left - startPoint.X)) + 2 };
             }
             return rectangle;
         }
@@ -86,10 +85,10 @@ public class MatrixChangeDetectorModified : IChangeDetector
         return rectangle;
     }
 
-    private double CalcDistance(Tuple<int, int> point1, Tuple<int, int> point2)
+    private double CalcDistance((int Y, int X) point1, (int Y, int X) point2)
     {
-        var differenceX = point2.Item2 - point1.Item2;
-        var differenceY = point2.Item1 - point1.Item1;
+        var differenceX = point2.X - point1.X;
+        var differenceY = point2.Y - point1.Y;
         var sum = differenceX * differenceX + differenceY * differenceY;
         return Math.Sqrt(sum);
     }

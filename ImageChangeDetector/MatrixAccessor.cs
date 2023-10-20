@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace ImageChangeDetector;
+﻿namespace ImageChangeDetector;
 
 public class MatrixAccessor : IMatrixAccessor
 {

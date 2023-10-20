@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace ImageChangeDetector;
+﻿namespace ImageChangeDetector;
 
 public class MatrixChangeDetector : IChangeDetector
 {
