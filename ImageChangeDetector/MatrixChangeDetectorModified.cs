@@ -26,46 +26,71 @@ public class MatrixChangeDetectorModified : IChangeDetector
         {
             rectangles.Add(new Rectangle(img1.Width, 0, img1.Height, img2.Width - img1.Width)); 
         }
-        
-        HashSet<int> X = new HashSet<int>();
-        HashSet<int> Y = new HashSet<int>();
+
+        HashSet<Tuple<int, int>> coordinates = new HashSet<Tuple<int, int>>();
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                if (!_comparer.Equals(img1.GetColorData(x,y), img2.GetColorData(x,y)))
+                if (!_comparer.Equals(img1.GetColorData(x,y),img2.GetColorData(x,y)))
                 {
-                    X.Add(x);
-                    Y.Add(y);
+                    coordinates.Add(new Tuple<int, int>(y, x));
                 }
             }
         }
 
-        var left = X.ElementAt(0);
-        var top = Y.ElementAt(0);
-        int heightY = 0;
-        int widthX = 0;
-        int positionX = 0;
-        for (int y = 0; y < Y.Count - 1; y += 2)
+        while (coordinates.Count != 0)
         {
-            if (Math.Abs(Y.ElementAt(y) - Y.ElementAt(y + 1)) > maxDifferenceRangePixels)
+            var tempRect = new Rectangle(coordinates.ElementAt(0).Item2, coordinates.ElementAt(0).Item1, 0, 0);
+            coordinates.Remove(coordinates.ElementAt(0));
+            if (!coordinates.Any())
             {
-                heightY = Math.Abs(Y.ElementAt(y) - top);
-                y += 1;
-                for (int x = positionX; x < X.Count - 1; x += 2)
-                {
-                    if (Math.Abs(X.ElementAt(x) - X.ElementAt(x + 1)) > maxDifferenceRangePixels)
-                    {
-                        widthX = Math.Abs(X.ElementAt(x) - left);
-                        positionX = x + 2;
-                        rectangles.Add(new Rectangle(left - 2, top - 2, heightY + 2, widthX + 2));
-                        left = X.ElementAt(positionX);
-                        top = Y.ElementAt(y);
-                        break;
-                    }
-                }
+                break;
+            }
+            Rectangle rectangle = GrowRectangle(coordinates,coordinates.ElementAt(0), tempRect);
+            rectangles.Add(rectangle);
+        }
+        
+        return rectangles;
+    }
+
+    private Rectangle GrowRectangle(HashSet<Tuple<int, int>> coordinates,Tuple<int, int> startPoint,  Rectangle rectangle)
+    {
+        var nearestPoints = coordinates.Where(x => CalcDistance(startPoint, x) < 5).ToList();
+        if (!nearestPoints.Any())
+        {
+            if (rectangle.Height < Math.Abs(rectangle.Top - startPoint.Item1))
+            {
+                rectangle = rectangle with { Height = Math.Abs(rectangle.Top - startPoint.Item1) };
+            }
+        
+            if (rectangle.Width < Math.Abs(rectangle.Left - startPoint.Item2))
+            {
+                rectangle = rectangle with { Width = Math.Abs(rectangle.Left - startPoint.Item2) };
+            }
+            return rectangle;
+        }
+        foreach (var nearestPoint in nearestPoints)
+        {
+            coordinates.Remove(nearestPoint);
+            var tempRect = GrowRectangle(coordinates, nearestPoint, rectangle);
+            if (rectangle.Height < tempRect.Height)
+            {
+                rectangle = rectangle with { Height = tempRect.Height };
+            }
+            if (rectangle.Width < tempRect.Width)
+            {
+                rectangle = rectangle with { Width = tempRect.Width };
             }
         }
-        return rectangles;
+        return rectangle;
+    }
+
+    private double CalcDistance(Tuple<int, int> point1, Tuple<int, int> point2)
+    {
+        var differenceX = point2.Item2 - point1.Item2;
+        var differenceY = point2.Item1 - point1.Item1;
+        var sum = differenceX * differenceX + differenceY * differenceY;
+        return Math.Sqrt(sum);
     }
 }
