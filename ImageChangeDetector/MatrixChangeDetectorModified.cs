@@ -67,6 +67,15 @@ public class MatrixChangeDetectorModified : IChangeDetector
             {
                 rectangle = rectangle with { Width = (Math.Abs(rectangle.Left - startPoint.X)) + 2 };
             }
+
+            if (rectangle.Left > startPoint.X)
+            {
+                rectangle = rectangle with
+                {
+                    Left = startPoint.X,
+                    Width = rectangle.Width + Math.Abs(startPoint.X - rectangle.Left)
+                };
+            }
             return rectangle;
         }
         foreach (var nearestPoint in nearestPoints)
@@ -80,6 +89,13 @@ public class MatrixChangeDetectorModified : IChangeDetector
             if (rectangle.Width < tempRect.Width)
             {
                 rectangle = rectangle with { Width = tempRect.Width };
+                if (rectangle.Left > tempRect.Left)
+                {
+                    rectangle = rectangle with
+                    {
+                        Left = tempRect.Left,
+                    };
+                }
             }
         }
         return rectangle;
