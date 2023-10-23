@@ -4,7 +4,7 @@ public class MatrixChangeDetectorModified : IChangeDetector
 {
     private readonly IEqualityComparer<ColorData> _comparer;
 
-    public MatrixChangeDetectorModified(ColorEqualityComparer comparer)
+    public MatrixChangeDetectorModified(IEqualityComparer<ColorData> comparer)
     {
         _comparer = comparer;
     }
@@ -27,7 +27,6 @@ public class MatrixChangeDetectorModified : IChangeDetector
         }
 
         bool[,] visited = new bool[height, width];
-        //List<(int Y, int X)> coordinates = new List<(int Y, int X)>();
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -37,77 +36,11 @@ public class MatrixChangeDetectorModified : IChangeDetector
                     Rectangle rectangle = new Rectangle(x, y, 0, 0);
                     rectangle = GrowRectangle(img1, img2, (Y: y, X: x), rectangle, visited);
                     rectangles.Add(rectangle);
-                    Console.WriteLine($"ADD RECTANGLE {rectangles.Count}");
                 }
             }
         }
-
-        // while (coordinates.Count != 0)
-        // {
-        //     var startPoint = coordinates.ElementAt(0);
-        //     var tempRect = new Rectangle(startPoint.Item2, startPoint.Item1, 0, 0);
-        //     coordinates.Remove(startPoint);
-        //     if (!coordinates.Any())
-        //     {
-        //         break;
-        //     }
-        //     Rectangle rectangle = GrowRectangle(coordinates,startPoint, tempRect);
-        //     rectangles.Add(rectangle);
-        // }
 
         return rectangles;
-    }
-
-    private Rectangle GrowRectangle(List<(int X, int Y)> coordinates, (int Y, int X) startPoint, Rectangle rectangle)
-    {
-        var nearestPoints = coordinates.Where(x => CalcDistance(startPoint, x) < 5).ToArray();
-        if (!nearestPoints.Any())
-        {
-            if (rectangle.Height < Math.Abs(rectangle.Top - startPoint.Y))
-            {
-                rectangle = rectangle with { Height = (Math.Abs(rectangle.Top - startPoint.Y)) + 2 };
-            }
-
-            if (rectangle.Width < Math.Abs(rectangle.Left - startPoint.X))
-            {
-                rectangle = rectangle with { Width = (Math.Abs(rectangle.Left - startPoint.X)) + 2 };
-            }
-
-            if (rectangle.Left > startPoint.X)
-            {
-                rectangle = rectangle with
-                {
-                    Left = startPoint.X,
-                    Width = rectangle.Width + Math.Abs(startPoint.X - rectangle.Left)
-                };
-            }
-
-            return rectangle;
-        }
-
-        foreach (var nearestPoint in nearestPoints)
-        {
-            coordinates.Remove(nearestPoint);
-            var tempRect = GrowRectangle(coordinates, nearestPoint, rectangle);
-            if (rectangle.Height < tempRect.Height)
-            {
-                rectangle = rectangle with { Height = tempRect.Height };
-            }
-
-            if (rectangle.Width < tempRect.Width)
-            {
-                rectangle = rectangle with { Width = tempRect.Width };
-                if (rectangle.Left > tempRect.Left)
-                {
-                    rectangle = rectangle with
-                    {
-                        Left = tempRect.Left,
-                    };
-                }
-            }
-        }
-
-        return rectangle;
     }
 
     private Rectangle GrowRectangle(IMatrixAccessor img1, IMatrixAccessor img2, (int Y, int X) startPoint,
@@ -213,13 +146,5 @@ public class MatrixChangeDetectorModified : IChangeDetector
             visited[startY, startPoint.X] = true;
             startY += direction;
         }
-    }
-
-    private double CalcDistance((int Y, int X) point1, (int Y, int X) point2)
-    {
-        var differenceX = point2.X - point1.X;
-        var differenceY = point2.Y - point1.Y;
-        var sum = differenceX * differenceX + differenceY * differenceY;
-        return Math.Sqrt(sum);
     }
 }
