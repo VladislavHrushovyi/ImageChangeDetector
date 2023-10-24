@@ -1,4 +1,6 @@
-﻿namespace ImageChangeDetector;
+﻿using System.Drawing;
+
+namespace ImageChangeDetector;
 
 public class MatrixChangeDetectorModifiedWithPrepare : IChangeDetector
 {
@@ -26,7 +28,7 @@ public class MatrixChangeDetectorModifiedWithPrepare : IChangeDetector
             rectangles.Add(new Rectangle(img1.Width, 0, img1.Height, img2.Width - img1.Width));
         }
 
-        List<(int Y, int X)> coordinates = new List<(int Y, int X)>();
+        HashSet<(int Y, int X)> coordinates = new HashSet<(int Y, int X)>();
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -51,54 +53,42 @@ public class MatrixChangeDetectorModifiedWithPrepare : IChangeDetector
             Rectangle rectangle = GrowRectangle(coordinates,startPoint, tempRect);
             rectangles.Add(rectangle);
         }
-
         return rectangles;
     }
 
-    private Rectangle GrowRectangle(List<(int X, int Y)> coordinates, (int Y, int X) startPoint, Rectangle rectangle)
+    private Rectangle GrowRectangle(HashSet<(int X, int Y)> coordinates, (int Y, int X) startPoint, Rectangle rectangle)
     {
-        var nearestPoints = coordinates.Where(x => CalcDistance(startPoint, x) < 5).ToArray();
-        if (!nearestPoints.Any())
+        var queue = new Queue<(int Y, int X)>();
+        queue.Enqueue(startPoint);
+        coordinates.Remove(startPoint);
+
+        while (queue.Count > 0)
         {
-            if (rectangle.Height < Math.Abs(rectangle.Top - startPoint.Y))
-            {
-                rectangle = rectangle with { Height = (Math.Abs(rectangle.Top - startPoint.Y)) + 2 };
-            }
+            var currentPoint = queue.Dequeue();
+            var nearestPoints = coordinates
+                .Where(p => CalcDistance(currentPoint, p) < 5)
+                .ToArray();
 
-            if (rectangle.Width < Math.Abs(rectangle.Left - startPoint.X))
+            foreach (var nearestPoint in nearestPoints)
             {
-                rectangle = rectangle with { Width = (Math.Abs(rectangle.Left - startPoint.X)) + 2 };
-            }
-
-            if (rectangle.Left > startPoint.X)
-            {
-                rectangle = rectangle with
+                queue.Enqueue(nearestPoint);
+                coordinates.Remove(nearestPoint);
+                if (rectangle.Height < Math.Abs(rectangle.Top - startPoint.Y))
                 {
-                    Left = startPoint.X,
-                    Width = rectangle.Width + Math.Abs(startPoint.X - rectangle.Left)
-                };
-            }
-
-            return rectangle;
-        }
-
-        foreach (var nearestPoint in nearestPoints)
-        {
-            coordinates.Remove(nearestPoint);
-            var tempRect = GrowRectangle(coordinates, nearestPoint, rectangle);
-            if (rectangle.Height < tempRect.Height)
-            {
-                rectangle = rectangle with { Height = tempRect.Height };
-            }
-
-            if (rectangle.Width < tempRect.Width)
-            {
-                rectangle = rectangle with { Width = tempRect.Width };
-                if (rectangle.Left > tempRect.Left)
+                    rectangle = rectangle with { Height = (Math.Abs(rectangle.Top - startPoint.Y)) + 2 };
+                }
+                
+                if (rectangle.Width < Math.Abs(rectangle.Left - startPoint.X))
+                {
+                    rectangle = rectangle with { Width = (Math.Abs(rectangle.Left - startPoint.X)) + 2 };
+                }
+                
+                if (rectangle.Left > startPoint.X)
                 {
                     rectangle = rectangle with
                     {
-                        Left = tempRect.Left,
+                        Left = startPoint.X,
+                        Width = rectangle.Width + Math.Abs(startPoint.X - rectangle.Left)
                     };
                 }
             }
