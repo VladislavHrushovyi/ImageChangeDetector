@@ -1,4 +1,6 @@
-﻿namespace ImageChangeDetector;
+﻿using System.Collections;
+
+namespace ImageChangeDetector;
 
 public class MatrixChangeDetectorModified : IChangeDetector
 {
@@ -46,77 +48,58 @@ public class MatrixChangeDetectorModified : IChangeDetector
     private Rectangle GrowRectangle(IMatrixAccessor img1, IMatrixAccessor img2, (int Y, int X) startPoint,
         Rectangle rectangle, bool[,] visited)
     {
-        var points = GetPixelsByAxisX(img1, img2, 1, 4, startPoint, visited)
-            .Concat(GetPixelsByAxisX(img1, img2, -1, 4, startPoint, visited))
-            .Concat(GetPixelsByAxisY(img1, img2, 1, 4, startPoint, visited))
-            .Concat(GetPixelsByAxisY(img1, img2, -1, 4, startPoint, visited)).ToArray();
-        if (points.Any())
+        visited[startPoint.Y, startPoint.X] = true;
+        Queue<(int Y, int X)> pointQueue = new Queue<(int Y, int X)>();
+        pointQueue.Enqueue(startPoint);
+        while (pointQueue.Count > 0)
         {
-            var maxX = points.Max(x => x.X);
-            var maxY = points.Max(y => y.Y);
-            var minX = points.Min(p => p.X);
-            if (rectangle.Height < Math.Abs(rectangle.Top - maxY))
-            {
-                rectangle = rectangle with { Height = (Math.Abs(rectangle.Top - maxY)) + 2 };
-            }
-
-            if (rectangle.Width < Math.Abs(rectangle.Left - maxX))
-            {
-                rectangle = rectangle with { Width = (Math.Abs(rectangle.Left - maxX)) + 2 };
-            }
-
-            if (rectangle.Left > minX)
-            {
-                rectangle = rectangle with
-                {
-                    Left = minX,
-                    Width = rectangle.Width + Math.Abs(minX - rectangle.Left)
-                };
-            }
-            
+            var currPoint = pointQueue.Dequeue();
+            var points = GetPixelsByAxisX(img1, img2, 1, 4, currPoint, visited)
+                .Concat(GetPixelsByAxisX(img1, img2, -1, 4, currPoint, visited))
+                .Concat(GetPixelsByAxisY(img1, img2, 1, 4, currPoint, visited))
+                .Concat(GetPixelsByAxisY(img1, img2, -1, 4, currPoint, visited)).ToArray();
             foreach (var point in points)
             {
-                var tempRect = GrowRectangle(img1, img2, point, rectangle, visited);
-                if (rectangle.Height < tempRect.Height)
+                pointQueue.Enqueue(point);
+                if (rectangle.Height < Math.Abs(rectangle.Top - point.Y))
                 {
-                    rectangle = rectangle with { Height = tempRect.Height };
+                    rectangle = rectangle with { Height = (Math.Abs(rectangle.Top - point.Y)) + 2 };
                 }
 
-                if (rectangle.Width < tempRect.Width)
+                if (rectangle.Width < Math.Abs(rectangle.Left - point.X))
                 {
-                    rectangle = rectangle with { Width = tempRect.Width };
-                    if (rectangle.Left > tempRect.Left)
+                    rectangle = rectangle with { Width = (Math.Abs(rectangle.Left - point.X)) + 2 };
+                }
+
+                if (rectangle.Left > point.X)
+                {
+                    rectangle = rectangle with
                     {
-                        rectangle = rectangle with
-                        {
-                            Left = tempRect.Left,
-                        };
-                    }
+                        Left = point.X,
+                        Width = rectangle.Width + Math.Abs(point.X - rectangle.Left)
+                    };
                 }
             }
-
-            return rectangle;
         }
+
         return rectangle;
     }
 
-    private IEnumerable<(int Y, int X)> GetPixelsByAxisX(IMatrixAccessor img1, IMatrixAccessor img2, int direction, int amount,
+    private IEnumerable<(int Y, int X)> GetPixelsByAxisX(IMatrixAccessor img1, IMatrixAccessor img2, int direction,
+        int amount,
         (int Y, int X) startPoint, bool[,] visited)
     {
         int startX = startPoint.X;
         int endX = startX + direction * amount;
         while (startX != endX)
         {
-            if (startX == endX)
-            {
-                yield break;
-            }
             if (startX > img1.Width - 1 || startX < 0)
             {
                 yield break;
             }
 
-            if (!visited[startPoint.Y, startX] && !_comparer.Equals(img1.GetColorData(startX, startPoint.Y), img2.GetColorData(startX, startPoint.Y)))
+            if (!visited[startPoint.Y, startX] && !_comparer.Equals(img1.GetColorData(startX, startPoint.Y),
+                    img2.GetColorData(startX, startPoint.Y)))
             {
                 yield return (startPoint.Y, startX);
             }
@@ -126,7 +109,8 @@ public class MatrixChangeDetectorModified : IChangeDetector
         }
     }
 
-    private IEnumerable<(int Y, int X)> GetPixelsByAxisY(IMatrixAccessor img1,IMatrixAccessor img2, int direction, int amount,
+    private IEnumerable<(int Y, int X)> GetPixelsByAxisY(IMatrixAccessor img1, IMatrixAccessor img2, int direction,
+        int amount,
         (int Y, int X) startPoint, bool[,] visited)
     {
         int startY = startPoint.Y;
@@ -138,9 +122,10 @@ public class MatrixChangeDetectorModified : IChangeDetector
                 yield break;
             }
 
-            if (!visited[startY, startPoint.X] && !_comparer.Equals(img1.GetColorData(startPoint.X, startY), img2.GetColorData(startPoint.X, startY)))
+            if (!visited[startY, startPoint.X] && !_comparer.Equals(img1.GetColorData(startPoint.X, startY),
+                    img2.GetColorData(startPoint.X, startY)))
             {
-                yield return (startY, startPoint.X);   
+                yield return (startY, startPoint.X);
             }
 
             visited[startY, startPoint.X] = true;
