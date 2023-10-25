@@ -15,7 +15,7 @@ public class ChangeDetectorApplication
     {
         var st = new Stopwatch();
         st.Start();
-        var detector = new MatrixChangeDetectorModifiedWithPrepare(new ColorEqualityComparer(0.1));
+        var detector = new MatrixChangeDetector(new ColorEqualityComparer(0.1));
         var rectangles = detector.Detect(new MatrixAccessor(bitmap1.AsMatrix()), new MatrixAccessor(bitmap2.AsMatrix()));
         st.Stop();
         Console.WriteLine(st.Elapsed);

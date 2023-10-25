@@ -4,7 +4,7 @@ using ImageChangeDetector;
 
 var changerApplication = new ChangeDetectorApplication();
 
-var result = changerApplication.Execute("./images/4/image1.png", "./images/4/image2.png");
-result.Save("./images/4/image3.png");
+var result = changerApplication.Execute("./images/3/image1.png", "./images/3/image2.png");
+result.Save("./images/3/image3.png");
 
 
