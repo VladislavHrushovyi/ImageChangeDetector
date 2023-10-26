@@ -20,8 +20,8 @@ public class ImageChangeDetectorBenchmark
         _detectorModified = new MatrixChangeDetectorModified(_comparer);
         _detectorWithPrepare = new MatrixChangeDetectorModifiedWithPrepare(_comparer);
 
-        _img1 = new MatrixAccessor(((Bitmap)Image.FromFile("./images/3/image1.png")).AsMatrix());
-        _img2 = new MatrixAccessor(((Bitmap)Image.FromFile("./images/3/image2.png")).AsMatrix());
+        _img1 = new MatrixAccessor(((Bitmap)Image.FromFile("D:\\Project\\ImageChangeDetector\\ImageChangeDetector\\bin\\Release\\net7.0\\images\\4\\image1.png")).AsMatrix());
+        _img2 = new MatrixAccessor(((Bitmap)Image.FromFile("D:\\Project\\ImageChangeDetector\\ImageChangeDetector\\bin\\Release\\net7.0\\images\\4\\image2.png")).AsMatrix());
     }
 
     [Benchmark(Baseline = true)]
@@ -29,12 +29,13 @@ public class ImageChangeDetectorBenchmark
     {
        return _detector.Detect(_img1, _img2);
     }
+    [Benchmark]
     public List<Rectangle> ChangeOnModifiedImplementation()
     {
         return _detectorModified.Detect(_img1, _img2);
     }
-    public List<Rectangle> ChangeDetectorOnModifiedPrepared()
-    {
-        return _detectorWithPrepare.Detect(_img1, _img2);
-    }
+    // public List<Rectangle> ChangeDetectorOnModifiedPrepared()
+    // {
+    //     return _detectorWithPrepare.Detect(_img1, _img2);
+    // }
 }
