@@ -5,17 +5,13 @@ namespace Experiments;
 
 public static class BitmapExtension
 {
-    public static IEnumerable<int> ReadAsBytesStream(this Bitmap bitmap)
+    public static IEnumerable<Color> AsStreamPixel(this Bitmap bitmap)
     {
-        using (MemoryStream stream = new MemoryStream())
+        for (int y = 0; y < bitmap.Height; y++)
         {
-            bitmap.Save(stream, ImageFormat.Png);
-            using (BinaryReader binaryReader = new BinaryReader(stream))
+            for (int x = 0; x < bitmap.Width; x++)
             {
-                while (stream.Position < stream.Length)
-                {
-                    yield return binaryReader.Read();
-                }
+                yield return bitmap.GetPixel(x, y);
             }
         }
     }

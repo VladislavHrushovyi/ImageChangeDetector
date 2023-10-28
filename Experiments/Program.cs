@@ -2,8 +2,7 @@
 
 using System.Drawing;
 using Experiments;
+using ImageChangeDetector;
 
 var image = (Bitmap)Image.FromFile("./images/1.png");
-var imageBytes = image.ReadAsBytesStream();
-Console.WriteLine(string.Join("-",imageBytes.Take(4)));
-Console.Read();
+var pixels = image.AsStreamPixel();
