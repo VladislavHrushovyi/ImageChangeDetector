@@ -2,7 +2,10 @@
 
 using System.Drawing;
 using Experiments;
-using ImageChangeDetector;
 
 var image = (Bitmap)Image.FromFile("./images/1.png");
-var pixels = image.AsStreamPixel();
+var imageSeparator = new ImageSeparator(image);
+
+var result = imageSeparator.Execute();
+
+result.Save("./images/result.png");
