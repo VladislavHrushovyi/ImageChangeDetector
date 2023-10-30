@@ -18,14 +18,18 @@ public class ImageSeparator : ITransformImage
     public Bitmap Execute()
     {
         var resultBitmap = new Bitmap(_originalImage.Width, _originalImage.Height);
-        var originalPixelsChunked = _originalImage.AsStreamPixel().Chunk(4);
-        foreach (var colorChunk in originalPixelsChunked)
+        var originalPixels = _originalImage.AsStreamPixel().ToArray();
+        for (int i = 0; i < originalPixels.Length - 4; i += 4)
         {
-            for (int i = 0; i < colorChunk.Length; i++)
-            {
-                var position = _separatorPointers[i].GetCurrPosition();
-                resultBitmap.SetPixel(position.Item2, position.Item1, colorChunk[i]);
-            }
+            var pos1 = _separatorPointers[0].GetCurrPosition();
+            var pos2 = _separatorPointers[1].GetCurrPosition();
+            var pos3 = _separatorPointers[2].GetCurrPosition();
+            var pos4 = _separatorPointers[3].GetCurrPosition();
+            
+            resultBitmap.SetPixel(pos1.Item2, pos1.Item1, originalPixels[i]);
+            resultBitmap.SetPixel(pos2.Item2, pos2.Item1, originalPixels[i + 1]);
+            resultBitmap.SetPixel(pos3.Item2, pos3.Item1, originalPixels[i + 2]);
+            resultBitmap.SetPixel(pos4.Item2, pos4.Item1, originalPixels[i + 3]);
         }
 
         return resultBitmap;
