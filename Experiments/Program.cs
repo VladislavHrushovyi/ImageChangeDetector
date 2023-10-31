@@ -2,9 +2,10 @@
 
 using System.Drawing;
 using Experiments;
+using ImageChangeDetector;
 
 var image = (Bitmap)Image.FromFile("./images/1.png");
-var imageSeparator = new ImageSeparator(image);
+var imageSeparator = new ImageSeparator(new MatrixAccessor(image.AsMatrix()));
 
 var result = imageSeparator.Execute();
 

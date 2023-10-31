@@ -1,35 +1,36 @@
 ﻿using System.Drawing;
+using ImageChangeDetector;
 
 namespace Experiments;
 
 public class ImageSeparator : ITransformImage
 {
-    private readonly Bitmap _originalImage;
+    private readonly IMatrixAccessor _originalImage;
     private readonly List<Pointer> _separatorPointers = new();
-    public ImageSeparator(Bitmap initImage)
+    public ImageSeparator(IMatrixAccessor matrixAccessor)
     {
-        _originalImage = initImage;
+        _originalImage = matrixAccessor;
         _separatorPointers.Add(new Pointer(0, 0, _originalImage.Width / 2, _originalImage.Height / 2));
         _separatorPointers.Add(new Pointer(_originalImage.Width / 2, 0, _originalImage.Width, _originalImage.Height / 2));
-        _separatorPointers.Add(new Pointer(0, _originalImage.Height / 2 - 1, _originalImage.Width / 2, _originalImage.Height));
+        _separatorPointers.Add(new Pointer(0, _originalImage.Height / 2, _originalImage.Width / 2, _originalImage.Height));
         _separatorPointers.Add(new Pointer(_originalImage.Width / 2, _originalImage.Height / 2 - 1, _originalImage.Width, _originalImage.Height));
     }
 
     public Bitmap Execute()
     {
         var resultBitmap = new Bitmap(_originalImage.Width, _originalImage.Height);
-        var originalPixels = _originalImage.AsStreamPixel().ToArray();
-        for (int i = 0; i < originalPixels.Length - 4; i += 4)
+        for (int y = 0; y < _originalImage.Height; y++)
         {
-            var pos1 = _separatorPointers[0].GetCurrPosition();
-            var pos2 = _separatorPointers[1].GetCurrPosition();
-            var pos3 = _separatorPointers[2].GetCurrPosition();
-            var pos4 = _separatorPointers[3].GetCurrPosition();
-            
-            resultBitmap.SetPixel(pos1.Item2, pos1.Item1, originalPixels[i]);
-            resultBitmap.SetPixel(pos2.Item2, pos2.Item1, originalPixels[i + 1]);
-            resultBitmap.SetPixel(pos3.Item2, pos3.Item1, originalPixels[i + 2]);
-            resultBitmap.SetPixel(pos4.Item2, pos4.Item1, originalPixels[i + 3]);
+            for (int x = 0; x < _originalImage.Width; x += 4)
+            {
+                for (int p = 0; p < _separatorPointers.Count; p++)
+                {
+                    var color = _originalImage.GetColorData(x + p, y);
+                    var pixel = Color.FromArgb(color.A, color.R, color.G, color.B);
+                    var position = _separatorPointers[p].GetCurrPosition();
+                    resultBitmap.SetPixel(position.Item2, position.Item1, pixel);
+                }
+            }
         }
 
         return resultBitmap;
@@ -49,7 +50,7 @@ class Pointer
     {
         this._startX = startX;
         this._startY = startY;
-        _x = startX;
+        _x = startX - 1;
         _y = startY;
         _width = width;
         _height = height;
