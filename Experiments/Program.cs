@@ -5,7 +5,7 @@ using Experiments;
 using ImageChangeDetector;
 
 var image = (Bitmap)Image.FromFile("./images/1.png");
-var imageSeparator = new ImageSeparator(new MatrixAccessor(image.AsMatrix()));
+var imageSeparator = new ColumnPermutation(new MatrixAccessor(image.AsMatrix()));
 
 var result = imageSeparator.Execute();
 
