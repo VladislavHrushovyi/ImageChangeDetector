@@ -20,14 +20,12 @@ public class ColumnPermutation : ITransformImage
         var resultImage = new Bitmap(_matrixAccessor.Width, _matrixAccessor.Height);
         for (int x = 0; x < _matrixAccessor.Width - 1; x+=2)
         {
-            var column1 = _matrixAccessor.GetRangeByY(x, _matrixAccessor.Height).ToArray();
-            var column2 = _matrixAccessor.GetRangeByY(x + 1, _matrixAccessor.Height).ToArray();
-
-            var pointer1 = _columnPointers[0].GetCurrentColumn();
-            var pointer2 = _columnPointers[1].GetCurrentColumn();
-            
-            WriteColumn(resultImage, column1, pointer1);
-            WriteColumn(resultImage, column2, pointer2);
+            for (int i = x; i < x + _columnPointers.Count; i++)
+            {
+                var column = _matrixAccessor.GetRangeByY(i, _matrixAccessor.Height).ToArray();
+                var pointer = _columnPointers[i - x].GetCurrentColumn();
+                WriteColumn(resultImage, column, pointer);
+            }
         }
 
         return resultImage;
@@ -46,13 +44,11 @@ public class ColumnPermutation : ITransformImage
 
 class ColumnPointer
 {
-    private readonly int _startX;
     private readonly int _endX;
     private int _x;
 
     public ColumnPointer(int startX, int width)
     {
-        _startX = startX;
         _endX = width;
         _x = startX - 1;
     }
