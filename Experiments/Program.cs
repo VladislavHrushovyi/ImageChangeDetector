@@ -5,8 +5,8 @@ using Experiments;
 
 var image = (Bitmap)Image.FromFile("./images/1.png");
 var app = new PermutationApplication(image);
-app = app.ColumnPermutation()
+app.ColumnPermutation()
     .RowPermutation()
     .ColumnPermutation()
-    .RowPermutation();
-app.SaveImage("./images/result.png");
+    .RowPermutation()
+    .SaveImage("./images/result.png");
