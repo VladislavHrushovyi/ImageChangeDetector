@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using ImageChangeDetector;
 
-namespace Experiments;
+namespace Experiments.Separators;
 
 public class ImageSeparator : ITransformImage
 {

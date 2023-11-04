@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using ImageChangeDetector;
 
-namespace Experiments;
+namespace Experiments.Permutations;
 
 public class ColumnPermutation : ITransformImage
 {
