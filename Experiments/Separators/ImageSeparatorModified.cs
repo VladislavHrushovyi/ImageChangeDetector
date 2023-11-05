@@ -6,9 +6,13 @@ namespace Experiments.Separators;
 public class ImageSeparatorModified : ITransformImage
 {
     private readonly Bitmap _image;
+    private readonly int _numberOfPixels;
+    private readonly List<RowPointer> _rowPointers = new();
     public ImageSeparatorModified(Bitmap image)
     {
         _image = image;
+        _numberOfPixels = image.Height * image.Width;
+        _rowPointers.Add(new RowPointer(0, _numberOfPixels / 4));
     }
     public Bitmap Execute()
     {
@@ -16,7 +20,6 @@ public class ImageSeparatorModified : ITransformImage
         var width = _image.Width;
         var resultImage = new Bitmap(width, height, _image.PixelFormat);
 
-        // Lock the bitmaps
         BitmapData bitmapDataOriginal = _image.LockBits(new Rectangle(0, 0, width, height),
             ImageLockMode.ReadOnly,
             _image.PixelFormat);
@@ -34,7 +37,6 @@ public class ImageSeparatorModified : ITransformImage
                 byte* ptrOriginal = (byte*)bitmapDataOriginal.Scan0;
                 byte* ptrResult = (byte*)bitmapDataResult.Scan0;
 
-                // Copy the RGB values from original to result image
                 for (int y = 0; y < height; y++)
                 {
                     for (int x = 0; x < width; x++)
@@ -52,11 +54,31 @@ public class ImageSeparatorModified : ITransformImage
         }
         finally
         {
-            // Unlock the bits for both original and result images
             _image.UnlockBits(bitmapDataOriginal);
             resultImage.UnlockBits(bitmapDataResult);
         }
 
         return resultImage;
+    }
+
+    class RowPointer
+    {
+        private int _startIndex;
+        private readonly int _length;
+        public RowPointer(int startIndex, int length)
+        {
+            _startIndex = startIndex - 1;
+            _length = length;
+        }
+
+        public int GetCurrentPosition()
+        {
+            _startIndex++;
+            if (_startIndex >= _length)
+            {
+                return _length - 1;
+            }
+            return _startIndex;
+        }
     }
 }
