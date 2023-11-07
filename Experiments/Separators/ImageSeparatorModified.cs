@@ -6,22 +6,22 @@ namespace Experiments.Separators;
 public class ImageSeparatorModified : ITransformImage
 {
     private readonly Bitmap _image;
-    private readonly int _numberOfPixels;
+    private readonly int _totalBytes;
     private readonly List<RowPointer> _rowPointers = new();
     public ImageSeparatorModified(Bitmap image)
     {
         _image = image;
-        _numberOfPixels = image.Height * image.Width;
+        _totalBytes = (image.Height * image.Width) * 3;
         InitializeRowPointers();
     }
 
     private void InitializeRowPointers()
     {
-        int quarter = _numberOfPixels / 4;
+        int quarter = _totalBytes / 4;
         _rowPointers.Add(new RowPointer(0, quarter));
         _rowPointers.Add(new RowPointer(quarter, quarter * 2));
         _rowPointers.Add(new RowPointer(quarter * 2, quarter * 3));
-        _rowPointers.Add(new RowPointer(quarter * 3, _numberOfPixels));
+        _rowPointers.Add(new RowPointer(quarter * 3, _totalBytes));
     }
 
     public Bitmap Execute()
@@ -42,31 +42,19 @@ public class ImageSeparatorModified : ITransformImage
             unsafe
             {
                 int bytesPerPixel = Image.GetPixelFormatSize(_image.PixelFormat) / 8;
-                int strideOriginal = bitmapDataOriginal.Stride;
-                int strideResult = bitmapDataResult.Stride;
                 byte* ptrOriginal = (byte*)bitmapDataOriginal.Scan0;
                 byte* ptrResult = (byte*)bitmapDataResult.Scan0;
 
-                for (int y = 0; y < height; y++)
+                for (int i = 0; i < _totalBytes - 12; i += 12)
                 {
-                    byte* currentLineOriginal = ptrOriginal + (y * strideOriginal);
-                    byte* currentLineResult = ptrResult + (y * strideResult);
-                    for (int x = 0; x < width - 4; x++)
+                    for (int p = 0; p < _rowPointers.Count; p++)
                     {
-                        for (int i = 0; i < _rowPointers.Count; i++)
+                        var position = _rowPointers[p].GetCurrentPosition();
+                        for (int pixelByte = 0; pixelByte < bytesPerPixel; pixelByte++)
                         {
-                            int xOffset = _rowPointers[i].GetCurrentPosition();
-
-                            int pixelOffset = (x+i) * bytesPerPixel;
-                            for (int byteIndex = 0; byteIndex < bytesPerPixel; byteIndex++)
-                            {
-                                var currByte = currentLineOriginal[pixelOffset + byteIndex];
-                                var temp = currentLineResult[xOffset + byteIndex];
-                                currentLineResult[xOffset + byteIndex] = currByte;
-                            }
-
-                            _rowPointers[i].IncrementPosition(width);
-                        }   
+                            ptrResult[position + pixelByte] = ptrOriginal[p * 3 + i + pixelByte];
+                        }
+                        _rowPointers[p].IncrementPosition(); 
                     }
                 }
             }
@@ -83,26 +71,26 @@ public class ImageSeparatorModified : ITransformImage
 
 class RowPointer
 {
-    private int _currentX;
-    private readonly int _length;
+    private int _currPosition;
+    private readonly int _endPosition;
 
-    public RowPointer(int startIndex, int length)
+    public RowPointer(int startIndex, int endPosition)
     {
-        _currentX = startIndex;
-        _length = length;
+        _currPosition = startIndex;
+        _endPosition = endPosition * 3;
     }
 
     public int GetCurrentPosition()
     {
-        return _currentX;
+        return _currPosition;
     }
 
-    public void IncrementPosition(int maxWidth)
+    public void IncrementPosition()
     {
-        _currentX++;
-        if (_currentX >= _length || _currentX >= maxWidth)
+        _currPosition+=3;
+        if (_currPosition >= _endPosition)
         {
-            _currentX = maxWidth - 1;
+            _currPosition = _endPosition - 3;
         }
     }
 }
